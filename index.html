@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="cs" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kovovýroba na míru — Roztoky</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            steel: '#1c1f24',
+            'steel-dark': '#141618',
+            beige: '#f5f0eb',
+            'beige-dark': '#ede8e1',
+            accent: '#2e6da4',
+            'accent-hover': '#255d8e',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Barlow Condensed', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <style>
+    .nav-link {
+      position: relative;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #2e6da4;
+      transition: width 0.3s ease;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .hero-video-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .hero-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.45) 0%,
+        rgba(0,0,0,0.60) 60%,
+        rgba(0,0,0,0.70) 100%
+      );
+    }
+
+    .service-card {
+      transition: box-shadow 0.25s ease;
+    }
+    .service-card:hover {
+      box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    }
+
+    /* Foto galerie v kartě */
+    .gallery-thumb {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      cursor: pointer;
+      aspect-ratio: 4/3;
+      background: #e8e2da;
+    }
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+      display: block;
+    }
+    .gallery-thumb:hover img {
+      transform: scale(1.07);
+    }
+    .gallery-thumb .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gallery-thumb:hover .thumb-overlay {
+      background: rgba(0,0,0,0.3);
+    }
+    .gallery-thumb .thumb-overlay svg {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      color: white;
+      width: 28px;
+      height: 28px;
+    }
+    .gallery-thumb:hover .thumb-overlay svg {
+      opacity: 1;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #lightbox.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #lightbox img {
+      max-width: 90vw;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      color: white;
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    #lightbox-close:hover { opacity: 1; }
+    #lightbox-caption {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .ref-card::before {
+      content: '\201C';
+      position: absolute;
+      top: 8px;
+      left: 20px;
+      font-size: 72px;
+      color: #2e6da4;
+      opacity: 0.25;
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+
+    .qr-placeholder {
+      background: repeating-conic-gradient(#d0c9c0 0% 25%, transparent 0% 50%) 0 0 / 8px 8px;
+    }
+  </style>
+</head>
+<body class="bg-beige font-sans text-[#2a2a2a]">
+
+  <!-- ═══════════════════════════════════════════
+       NAV
+  ═══════════════════════════════════════════ -->
+  <nav id="nav" class="fixed top-0 left-0 right-0 z-50 bg-steel transition-shadow duration-300">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+
+      <a href="#uvod" class="font-display text-xl font-bold text-white tracking-wider uppercase">
+        Kovo<span class="text-accent">výroba</span>
+      </a>
+
+      <!-- Desktop menu -->
+      <ul class="hidden md:flex items-center gap-8">
+        <li><a href="#sluzby" class="nav-link text-gray-300 hover:text-white text-sm font-medium transition-colors">Služby</a></li>
+        <li><a href="#reference" class="nav-link text-gray-300 hover:text-white text-sm font-medium transition-colors">Reference</a></li>
+        <li><a href="#mapa" class="nav-link text-gray-300 hover:text-white text-sm font-medium transition-colors">Kde nás najdete</a></li>
+        <li>
+          <a href="#kontakt" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-5 py-2 rounded transition-colors">
+            Kontakt
+          </a>
+        </li>
+      </ul>
+
+      <!-- Hamburger -->
+      <button id="menu-btn" class="md:hidden text-white focus:outline-none" aria-label="Otevřít menu">
+        <svg id="icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile dropdown -->
+    <div id="mobile-menu" class="hidden md:hidden bg-steel border-t border-white/10">
+      <ul class="flex flex-col px-6 py-4 gap-4">
+        <li><a href="#sluzby" class="text-gray-300 hover:text-white font-medium transition-colors" onclick="closeMenu()">Služby</a></li>
+        <li><a href="#reference" class="text-gray-300 hover:text-white font-medium transition-colors" onclick="closeMenu()">Reference</a></li>
+        <li><a href="#mapa" class="text-gray-300 hover:text-white font-medium transition-colors" onclick="closeMenu()">Kde nás najdete</a></li>
+        <li><a href="#kontakt" class="text-gray-300 hover:text-white font-medium transition-colors" onclick="closeMenu()">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       HERO
+  ═══════════════════════════════════════════ -->
+  <section id="uvod" class="relative min-h-screen flex items-center">
+
+    <!-- Video pozadí -->
+    <div class="hero-video-wrap">
+      <video autoplay muted loop playsinline>
+        <source src="kovovyroba_balkon_transformace.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <!-- Tmavý přehoz -->
+    <div class="hero-overlay"></div>
+
+    <!-- Obsah -->
+    <div class="relative z-10 w-full pt-20">
+      <div class="max-w-4xl mx-auto px-6 py-24 text-center">
+        <span class="inline-block text-accent text-sm font-semibold tracking-widest uppercase mb-5">Zakázková výroba</span>
+        <h1 class="font-display text-6xl md:text-8xl font-bold text-white leading-tight mb-6">
+          Kovovýroba<br/>na míru
+        </h1>
+        <p class="text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
+          Vyrábíme balkony, zábradlí, vrata, brány i atypické kovové konstrukce. Každý výrobek vzniká ručně, přesně podle vašich požadavků.
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a href="#kontakt" class="bg-accent hover:bg-accent-hover text-white font-semibold px-10 py-4 rounded text-base transition-colors">
+            Nezávazně poptat
+          </a>
+          <a href="#sluzby" class="border border-white/40 hover:border-white text-white font-semibold px-10 py-4 rounded text-base transition-colors">
+            Naše služby
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Stats bar -->
+  <div class="bg-beige-dark border-y border-[#d8d0c5]">
+    <div class="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center" id="stats-bar">
+      <div data-aos="fade-up" data-aos-delay="0">
+        <div class="font-display text-3xl font-bold text-steel" data-count="15" data-suffix="+">0</div>
+        <div class="text-sm text-[#6b6b6b] mt-1">let zkušeností</div>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="100">
+        <div class="font-display text-3xl font-bold text-steel" data-count="500" data-suffix="+">0</div>
+        <div class="text-sm text-[#6b6b6b] mt-1">realizací</div>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="200">
+        <div class="font-display text-3xl font-bold text-steel" data-count="100" data-suffix="%">0</div>
+        <div class="text-sm text-[#6b6b6b] mt-1">zakázkově</div>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="300">
+        <div class="font-display text-3xl font-bold text-steel">Roztoky</div>
+        <div class="text-sm text-[#6b6b6b] mt-1">a okolí Prahy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SLUŽBY
+  ═══════════════════════════════════════════ -->
+  <section id="sluzby" class="bg-beige py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-14" data-aos="fade-up">
+        <span class="text-accent text-sm font-semibold tracking-widest uppercase">Co děláme</span>
+        <h2 class="font-display text-4xl font-bold text-steel mt-2">Naše služby</h2>
+        <p class="text-[#6b6b6b] mt-4 max-w-xl mx-auto">Specializujeme se na zakázkovou kovovýrobu pro domácnosti i firmy. Každý výrobek je vyroben přesně na míru vašeho prostoru a přání.</p>
+      </div>
+
+      <div class="flex flex-col gap-16">
+
+        <!-- Makro pro thumbnail -->
+        <!-- Balkony a zábradlí — TEXT VLEVO, FOTO VPRAVO -->
+        <div class="flex flex-col md:flex-row gap-10 items-center" data-aos="fade-up">
+          <div class="md:w-2/5 flex-shrink-0">
+            <div class="w-11 h-11 mb-4 text-accent">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12h18M3 12V8m18 4V8M3 8h18M7 8V5m4 3V5m4 3V5M7 20v-8m4 8v-8m4 8v-8"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-3xl font-bold text-steel mb-3">Balkony a zábradlí</h3>
+            <p class="text-[#6b6b6b] leading-relaxed">Nerezová, pozinkovaná i kombinovaná zábradlí pro interiér i exteriér. Navrhujeme dle projektu i vašeho vlastního návrhu — moderní, klasická nebo designová řešení.</p>
+          </div>
+          <div class="md:w-3/5 grid grid-cols-2 gap-3">
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Balkony+1" data-caption="Balkony a zábradlí — ukázka 1">
+              <img src="https://placehold.co/600x400/d8d0c5/6b6b6b?text=Foto+1" alt="Balkony 1" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Balkony+2" data-caption="Balkony a zábradlí — ukázka 2">
+              <img src="https://placehold.co/600x400/c8c0b5/6b6b6b?text=Foto+2" alt="Balkony 2" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Balkony+3" data-caption="Balkony a zábradlí — ukázka 3">
+              <img src="https://placehold.co/600x400/b8b0a5/6b6b6b?text=Foto+3" alt="Balkony 3" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Balkony+4" data-caption="Balkony a zábradlí — ukázka 4">
+              <img src="https://placehold.co/600x400/a8a095/6b6b6b?text=Foto+4" alt="Balkony 4" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-[#ddd8d0]" />
+
+        <!-- Vrata, brány, ploty — FOTO VLEVO, TEXT VPRAVO -->
+        <div class="flex flex-col md:flex-row-reverse gap-10 items-center" data-aos="fade-up">
+          <div class="md:w-2/5 flex-shrink-0">
+            <div class="w-11 h-11 mb-4 text-accent">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21V5a2 2 0 012-2h14a2 2 0 012 2v16M9 21V9h6v12M9 12h6"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-3xl font-bold text-steel mb-3">Vrata, brány a ploty</h3>
+            <p class="text-[#6b6b6b] leading-relaxed">Posuvné i křídlové brány, plotové výplně, vjezdové brány s možností automatického pohonu. Řešíme vše od návrhu přes výrobu až po montáž.</p>
+          </div>
+          <div class="md:w-3/5 grid grid-cols-2 gap-3">
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Vrata+1" data-caption="Vrata, brány a ploty — ukázka 1">
+              <img src="https://placehold.co/600x400/d8d0c5/6b6b6b?text=Foto+1" alt="Vrata 1" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Vrata+2" data-caption="Vrata, brány a ploty — ukázka 2">
+              <img src="https://placehold.co/600x400/c8c0b5/6b6b6b?text=Foto+2" alt="Vrata 2" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Vrata+3" data-caption="Vrata, brány a ploty — ukázka 3">
+              <img src="https://placehold.co/600x400/b8b0a5/6b6b6b?text=Foto+3" alt="Vrata 3" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Vrata+4" data-caption="Vrata, brány a ploty — ukázka 4">
+              <img src="https://placehold.co/600x400/a8a095/6b6b6b?text=Foto+4" alt="Vrata 4" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-[#ddd8d0]" />
+
+        <!-- Schodiště — TEXT VLEVO, FOTO VPRAVO -->
+        <div class="flex flex-col md:flex-row gap-10 items-center" data-aos="fade-up">
+          <div class="md:w-2/5 flex-shrink-0">
+            <div class="w-11 h-11 mb-4 text-accent">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21h4v-4h4v-4h4v-4h4V5H3v16z"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-3xl font-bold text-steel mb-3">Schodiště a ocelové konstrukce</h3>
+            <p class="text-[#6b6b6b] leading-relaxed">Interiérová i exteriérová schodiště, nosné ocelové konstrukce, lávky a plošiny. Každý prvek je staticky prověřen a precizně zpracován.</p>
+          </div>
+          <div class="md:w-3/5 grid grid-cols-2 gap-3">
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Schodiste+1" data-caption="Schodiště — ukázka 1">
+              <img src="https://placehold.co/600x400/d8d0c5/6b6b6b?text=Foto+1" alt="Schodiště 1" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Schodiste+2" data-caption="Schodiště — ukázka 2">
+              <img src="https://placehold.co/600x400/c8c0b5/6b6b6b?text=Foto+2" alt="Schodiště 2" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Schodiste+3" data-caption="Schodiště — ukázka 3">
+              <img src="https://placehold.co/600x400/b8b0a5/6b6b6b?text=Foto+3" alt="Schodiště 3" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Schodiste+4" data-caption="Schodiště — ukázka 4">
+              <img src="https://placehold.co/600x400/a8a095/6b6b6b?text=Foto+4" alt="Schodiště 4" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-[#ddd8d0]" />
+
+        <!-- Pergoly — FOTO VLEVO, TEXT VPRAVO -->
+        <div class="flex flex-col md:flex-row-reverse gap-10 items-center" data-aos="fade-up">
+          <div class="md:w-2/5 flex-shrink-0">
+            <div class="w-11 h-11 mb-4 text-accent">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7h18M5 7v14m14-14v14M9 7v5m6-5v5M3 12h18"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-3xl font-bold text-steel mb-3">Pergoly a přístřešky</h3>
+            <p class="text-[#6b6b6b] leading-relaxed">Zastřešení teras a garážových stání, pergoly z oceli a hliníku. Kombinujeme kov s dřevem nebo sklem pro výsledek, který ladí s vaším domem.</p>
+          </div>
+          <div class="md:w-3/5 grid grid-cols-2 gap-3">
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Pergola+1" data-caption="Pergoly a přístřešky — ukázka 1">
+              <img src="https://placehold.co/600x400/d8d0c5/6b6b6b?text=Foto+1" alt="Pergola 1" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Pergola+2" data-caption="Pergoly a přístřešky — ukázka 2">
+              <img src="https://placehold.co/600x400/c8c0b5/6b6b6b?text=Foto+2" alt="Pergola 2" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Pergola+3" data-caption="Pergoly a přístřešky — ukázka 3">
+              <img src="https://placehold.co/600x400/b8b0a5/6b6b6b?text=Foto+3" alt="Pergola 3" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Pergola+4" data-caption="Pergoly a přístřešky — ukázka 4">
+              <img src="https://placehold.co/600x400/a8a095/6b6b6b?text=Foto+4" alt="Pergola 4" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-[#ddd8d0]" />
+
+        <!-- Kovový nábytek — TEXT VLEVO, FOTO VPRAVO -->
+        <div class="flex flex-col md:flex-row gap-10 items-center" data-aos="fade-up">
+          <div class="md:w-2/5 flex-shrink-0">
+            <div class="w-11 h-11 mb-4 text-accent">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a1 1 0 00-1 1v2a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1zM6 11v8m12-8v8M4 19h16"/>
+              </svg>
+            </div>
+            <h3 class="font-display text-3xl font-bold text-steel mb-3">Kovový nábytek a atypické výrobky</h3>
+            <p class="text-[#6b6b6b] leading-relaxed">Stoly, police, rámy, madla, dekorativní prvky — cokoliv na zakázku. Máte vlastní nápad nebo výkres? Rádi ho realizujeme.</p>
+          </div>
+          <div class="md:w-3/5 grid grid-cols-2 gap-3">
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Nabytek+1" data-caption="Kovový nábytek — ukázka 1">
+              <img src="https://placehold.co/600x400/d8d0c5/6b6b6b?text=Foto+1" alt="Nábytek 1" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Nabytek+2" data-caption="Kovový nábytek — ukázka 2">
+              <img src="https://placehold.co/600x400/c8c0b5/6b6b6b?text=Foto+2" alt="Nábytek 2" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Nabytek+3" data-caption="Kovový nábytek — ukázka 3">
+              <img src="https://placehold.co/600x400/b8b0a5/6b6b6b?text=Foto+3" alt="Nábytek 3" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+            <div class="gallery-thumb" onclick="openLightbox(this)" data-src="https://placehold.co/900x600/2a2a2a/ffffff?text=Nabytek+4" data-caption="Kovový nábytek — ukázka 4">
+              <img src="https://placehold.co/600x400/a8a095/6b6b6b?text=Foto+4" alt="Nábytek 4" loading="lazy"/>
+              <div class="thumb-overlay"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       REFERENCE
+  ═══════════════════════════════════════════ -->
+  <section id="reference" class="bg-beige-dark py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-14" data-aos="fade-up">
+        <span class="text-accent text-sm font-semibold tracking-widest uppercase">Spokojení zákazníci</span>
+        <h2 class="font-display text-4xl font-bold text-steel mt-2">Reference</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+
+        <div class="ref-card relative bg-white rounded-xl p-8 pt-12 shadow-sm border border-[#d8d0c5]" data-aos="fade-up" data-aos-delay="0">
+          <p class="text-[#4a4a4a] text-sm leading-relaxed mb-6">Objednali jsme zábradlí na terasu. Přesně dle výkresu, dodáno v termínu, montáž proběhla bez problémů. Výsledek vypadá skvěle a cena byla férová.</p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-steel flex items-center justify-center text-white text-xs font-bold flex-shrink-0">TK</div>
+            <div>
+              <div class="font-semibold text-steel text-sm">Tomáš K.</div>
+              <div class="text-xs text-[#6b6b6b]">Praha</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-card relative bg-white rounded-xl p-8 pt-12 shadow-sm border border-[#d8d0c5]" data-aos="fade-up" data-aos-delay="100">
+          <p class="text-[#4a4a4a] text-sm leading-relaxed mb-6">Brána přesně podle našeho návrhu, pohon funguje skvěle. Komunikace rychlá a profesionální. Oceňuji, že pán navrhl lepší řešení, než jsme měli původně v hlavě.</p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-steel flex items-center justify-center text-white text-xs font-bold flex-shrink-0">LM</div>
+            <div>
+              <div class="font-semibold text-steel text-sm">Lenka M.</div>
+              <div class="text-xs text-[#6b6b6b]">Roztoky</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-card relative bg-white rounded-xl p-8 pt-12 shadow-sm border border-[#d8d0c5]" data-aos="fade-up" data-aos-delay="200">
+          <p class="text-[#4a4a4a] text-sm leading-relaxed mb-6">Nechali jsme vyrobit kovový stůl do dílny na míru. Výsledek předčil očekávání — masivní, precizní zpracování. Určitě se vrátíme s dalšími zakázkami.</p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-steel flex items-center justify-center text-white text-xs font-bold flex-shrink-0">MH</div>
+            <div>
+              <div class="font-semibold text-steel text-sm">Martin H.</div>
+              <div class="text-xs text-[#6b6b6b]">Kladno</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       MAPA
+  ═══════════════════════════════════════════ -->
+  <section id="mapa" class="bg-beige py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-14" data-aos="fade-up">
+        <span class="text-accent text-sm font-semibold tracking-widest uppercase">Lokalita</span>
+        <h2 class="font-display text-4xl font-bold text-steel mt-2">Kde nás najdete</h2>
+        <p class="text-[#6b6b6b] mt-4 max-w-xl mx-auto">Naše dílna se nachází v Roztokách u Prahy. Dostupní autem i MHD, parkování přímo u objektu.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-10 items-start">
+
+        <!-- Kontaktní info -->
+        <div class="space-y-7" data-aos="fade-right">
+          <div>
+            <div class="text-xs font-semibold tracking-widest uppercase text-accent mb-1">Adresa</div>
+            <div class="text-steel font-medium">Roztoky u Prahy</div>
+            <div class="text-[#6b6b6b] text-sm">Středočeský kraj</div>
+          </div>
+          <div>
+            <div class="text-xs font-semibold tracking-widest uppercase text-accent mb-1">Telefon</div>
+            <a href="tel:+420123456789" class="text-steel font-medium hover:text-accent transition-colors">+420 123 456 789</a>
+          </div>
+          <div>
+            <div class="text-xs font-semibold tracking-widest uppercase text-accent mb-1">E-mail</div>
+            <a href="mailto:info@kovovyroba.cz" class="text-steel font-medium hover:text-accent transition-colors">info@kovovyroba.cz</a>
+          </div>
+          <div>
+            <div class="text-xs font-semibold tracking-widest uppercase text-accent mb-1">Provozní doba</div>
+            <div class="text-[#6b6b6b] text-sm">Po–Pá: 7:00 – 17:00</div>
+            <div class="text-[#6b6b6b] text-sm">So: po dohodě</div>
+          </div>
+        </div>
+
+        <!-- Mapa iframe -->
+        <div class="md:col-span-2" data-aos="fade-left">
+          <!--
+            Nahraď src odkazem z Google Maps:
+            1. Otevři maps.google.com a najdi svou adresu
+            2. Klikni Sdílet → Vložit mapu → Zkopíruj src z iframe kódu
+          -->
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10224!2d14.3987!3d50.1542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b9b0a2a2a2a2a%3A0x0!2sRoztoky!5e0!3m2!1scs!2scz!4v1234567890"
+            class="w-full h-72 md:h-[340px] rounded-xl border border-[#d8d0c5]"
+            style="border:0"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Mapa — Kovovýroba Roztoky">
+          </iframe>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       KONTAKTNÍ FORMULÁŘ
+  ═══════════════════════════════════════════ -->
+  <section id="kontakt" class="bg-steel py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-2 gap-16 items-start">
+
+        <!-- Text -->
+        <div>
+          <span class="text-accent text-sm font-semibold tracking-widest uppercase">Poptávka</span>
+          <h2 class="font-display text-4xl font-bold text-white mt-2 mb-5">Kontaktujte nás</h2>
+          <p class="text-gray-400 leading-relaxed mb-4">
+            Máte zájem o nezávaznou konzultaci nebo cenovou nabídku? Napište nám — ozveme se zpravidla do 24 hodin.
+          </p>
+          <p class="text-gray-400 leading-relaxed">
+            Rádi probereme váš projekt, doporučíme optimální řešení a připravíme kalkulaci přímo na míru.
+          </p>
+        </div>
+
+        <!-- Formulář -->
+        <form id="contact-form" class="space-y-4" novalidate>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="jmeno" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jméno</label>
+              <input type="text" id="jmeno" name="jmeno" required
+                class="w-full bg-[#2c2f35] border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors placeholder-gray-500"
+                placeholder="Jan" />
+            </div>
+            <div>
+              <label for="prijmeni" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Příjmení</label>
+              <input type="text" id="prijmeni" name="prijmeni" required
+                class="w-full bg-[#2c2f35] border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors placeholder-gray-500"
+                placeholder="Novák" />
+            </div>
+          </div>
+          <div>
+            <label for="email" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">E-mail</label>
+            <input type="email" id="email" name="email" required
+              class="w-full bg-[#2c2f35] border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors placeholder-gray-500"
+              placeholder="jan@email.cz" />
+          </div>
+          <div>
+            <label for="zprava" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Zpráva</label>
+            <textarea id="zprava" name="zprava" required rows="5"
+              class="w-full bg-[#2c2f35] border border-white/10 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent transition-colors placeholder-gray-500 resize-none"
+              placeholder="Popište váš projekt nebo dotaz..."></textarea>
+          </div>
+          <button type="submit"
+            class="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-3 rounded-lg transition-colors">
+            Odeslat poptávku
+          </button>
+
+          <div id="form-success" class="hidden bg-green-900/40 border border-green-500/30 text-green-400 text-sm rounded-lg px-4 py-3 text-center">
+            Děkujeme! Vaši zprávu jsme přijali. Ozveme se vám co nejdříve.
+          </div>
+          <div id="form-error" class="hidden bg-red-900/40 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 text-center">
+            Vyplňte prosím všechna povinná pole.
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       SOCIÁLNÍ SÍTĚ / QR KÓDY
+  ═══════════════════════════════════════════ -->
+  <section id="socialni-site" class="bg-beige-dark py-16">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <span class="text-accent text-sm font-semibold tracking-widest uppercase">Online</span>
+        <h2 class="font-display text-3xl font-bold text-steel mt-2">Sledujte nás</h2>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-8 justify-center items-center">
+
+        <!-- Instagram -->
+        <div class="bg-white rounded-xl p-8 shadow-sm border border-[#d8d0c5] flex flex-col items-center gap-4 w-64">
+          <svg class="w-8 h-8 text-[#E1306C]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+          </svg>
+          <div class="text-center">
+            <div class="font-semibold text-steel text-sm">Instagram</div>
+            <div class="text-xs text-[#6b6b6b]">@kovovyroba</div>
+          </div>
+          <!-- Nahraď obrázkem QR kódu pro Instagram -->
+          <div class="qr-placeholder w-28 h-28 rounded-lg border border-[#d8d0c5]" title="Místo pro QR kód Instagram"></div>
+          <p class="text-xs text-[#6b6b6b] text-center">Naskenujte nebo navštivte profil</p>
+        </div>
+
+        <!-- Facebook -->
+        <div class="bg-white rounded-xl p-8 shadow-sm border border-[#d8d0c5] flex flex-col items-center gap-4 w-64">
+          <svg class="w-8 h-8 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+          <div class="text-center">
+            <div class="font-semibold text-steel text-sm">Facebook</div>
+            <div class="text-xs text-[#6b6b6b]">Kovovýroba Roztoky</div>
+          </div>
+          <!-- Nahraď obrázkem QR kódu pro Facebook -->
+          <div class="qr-placeholder w-28 h-28 rounded-lg border border-[#d8d0c5]" title="Místo pro QR kód Facebook"></div>
+          <p class="text-xs text-[#6b6b6b] text-center">Naskenujte nebo navštivte stránku</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════ -->
+  <footer class="bg-steel-dark text-gray-400 py-10">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="font-display text-xl font-bold text-white mb-3">Kovo<span class="text-accent">výroba</span></div>
+          <p class="text-sm leading-relaxed">Zakázková kovovýroba v Roztokách u Prahy. Precizní práce, trvanlivý výsledek.</p>
+        </div>
+        <div>
+          <div class="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-3">Navigace</div>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#sluzby" class="hover:text-white transition-colors">Služby</a></li>
+            <li><a href="#reference" class="hover:text-white transition-colors">Reference</a></li>
+            <li><a href="#mapa" class="hover:text-white transition-colors">Kde nás najdete</a></li>
+            <li><a href="#kontakt" class="hover:text-white transition-colors">Kontakt</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs font-semibold tracking-widest uppercase text-gray-500 mb-3">Kontakt</div>
+          <ul class="space-y-2 text-sm">
+            <li>Roztoky u Prahy</li>
+            <li><a href="tel:+420123456789" class="hover:text-white transition-colors">+420 123 456 789</a></li>
+            <li><a href="mailto:info@kovovyroba.cz" class="hover:text-white transition-colors">info@kovovyroba.cz</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-6 text-center text-xs text-gray-600">
+        © 2026 Kovovýroba Roztoky. Všechna práva vyhrazena.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="closeLightboxOnBg(event)">
+    <span id="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img id="lightbox-img" src="" alt="" />
+    <div id="lightbox-caption"></div>
+  </div>
+
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+  <!-- ═══════════════════════════════════════════
+       JS
+  ═══════════════════════════════════════════ -->
+  <script>
+    // Lightbox
+    function openLightbox(el) {
+      const lb = document.getElementById('lightbox');
+      document.getElementById('lightbox-img').src = el.dataset.src;
+      document.getElementById('lightbox-caption').textContent = el.dataset.caption || '';
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    function closeLightboxOnBg(e) {
+      if (e.target === document.getElementById('lightbox')) closeLightbox();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    // AOS init
+    AOS.init({
+      duration: 600,
+      easing: 'ease-out',
+      once: true,
+      offset: 60,
+    });
+
+    // Counter animace pro stats bar
+    function animateCounter(el) {
+      const target = parseInt(el.dataset.count);
+      const suffix = el.dataset.suffix || '';
+      const duration = 1200;
+      const step = 16;
+      const increment = target / (duration / step);
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        el.textContent = Math.floor(current) + suffix;
+      }, step);
+    }
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('[data-count]').forEach(animateCounter);
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const statsBar = document.getElementById('stats-bar');
+    if (statsBar) statsObserver.observe(statsBar);
+
+    // Hamburger menu
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const iconOpen = document.getElementById('icon-open');
+    const iconClose = document.getElementById('icon-close');
+
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      iconOpen.classList.toggle('hidden');
+      iconClose.classList.toggle('hidden');
+    });
+
+    function closeMenu() {
+      mobileMenu.classList.add('hidden');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+    }
+
+    // Nav shadow on scroll
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('nav');
+      nav.classList.toggle('shadow-xl', window.scrollY > 10);
+    });
+
+    // Contact form
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const jmeno = document.getElementById('jmeno').value.trim();
+      const prijmeni = document.getElementById('prijmeni').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const zprava = document.getElementById('zprava').value.trim();
+      const success = document.getElementById('form-success');
+      const error = document.getElementById('form-error');
+
+      if (!jmeno || !prijmeni || !email || !zprava) {
+        error.classList.remove('hidden');
+        success.classList.add('hidden');
+        return;
+      }
+
+      error.classList.add('hidden');
+      success.classList.remove('hidden');
+      this.reset();
+    });
+  </script>
+
+</body>
+</html>
